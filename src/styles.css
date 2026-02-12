@@ -2,6 +2,7 @@
 @import 'tw-animate-css';
 @import 'shadcn/tailwind.css';
 @import '@fontsource-variable/geist';
+@import '@fontsource-variable/fraunces';
 
 @custom-variant dark (&:is(.dark *));
 
@@ -76,6 +77,7 @@
 
 @theme inline {
   --font-sans: 'Geist Variable', sans-serif;
+  --font-display: 'Fraunces Variable', serif;
   --color-sidebar-ring: var(--sidebar-ring);
   --color-sidebar-border: var(--sidebar-border);
   --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
@@ -126,4 +128,36 @@
   html {
     @apply font-sans;
   }
+}
+
+/* ── Animations ── */
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(100%);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@utility animate-fade-in-up {
+  animation: fade-in-up 0.7s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+@utility animate-slide-up {
+  animation: slide-up 0.6s cubic-bezier(0.22, 1, 0.36, 1) 0.3s both;
 }

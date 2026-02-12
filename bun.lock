@@ -6,9 +6,11 @@
       "name": "start-app",
       "dependencies": {
         "@base-ui/react": "^1.1.0",
+        "@fontsource-variable/fraunces": "^5.2.9",
         "@fontsource-variable/geist": "^5.2.8",
         "@tailwindcss/vite": "^4.0.6",
         "@tanstack/react-devtools": "^0.7.0",
+        "@tanstack/react-query": "^5.90.21",
         "@tanstack/react-router": "^1.132.0",
         "@tanstack/react-router-devtools": "^1.132.0",
         "@tanstack/react-router-ssr-query": "^1.131.7",
@@ -225,6 +227,8 @@
     "@floating-ui/react-dom": ["@floating-ui/react-dom@2.1.7", "", { "dependencies": { "@floating-ui/dom": "^1.7.5" }, "peerDependencies": { "react": ">=16.8.0", "react-dom": ">=16.8.0" } }, "sha512-0tLRojf/1Go2JgEVm+3Frg9A3IW8bJgKgdO0BN5RkF//ufuz2joZM63Npau2ff3J6lUVYgDSNzNkR+aH3IVfjg=="],
 
     "@floating-ui/utils": ["@floating-ui/utils@0.2.10", "", {}, "sha512-aGTxbpbg8/b5JfU1HXSrbH3wXZuLPJcNEcZQFMxLs3oSzgtVu6nFPkbbGGUvBcUjKV2YyB9Wxxabo+HEH9tcRQ=="],
+
+    "@fontsource-variable/fraunces": ["@fontsource-variable/fraunces@5.2.9", "", {}, "sha512-Y6IjunlN9Ni723np+GIgAaKzCDBrPRrqNi01TZxHs5wtHYROWFM9W6yiT+/gGwSjWIRD18oX17kD/BRWekc/Lw=="],
 
     "@fontsource-variable/geist": ["@fontsource-variable/geist@5.2.8", "", {}, "sha512-cJ6m9e+8MQ5dCYJsLylfZrgBh6KkG4bOLckB35Tr9J/EqdkEM6QllH5PxqP1dhTvFup+HtMRPuz9xOjxXJggxw=="],
 
