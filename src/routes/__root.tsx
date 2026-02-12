@@ -38,12 +38,16 @@ function RootDocument({ children }: { children: React.ReactNode }) {
   const theme = Route.useLoaderData();
   const queryClient = new QueryClient();
 
-  console.log("theme", theme);
-
   return (
     <html lang="en" className={theme}>
       <head>
         <HeadContent />
+        {/* Resolve "system" to light/dark before paint to avoid flash */}
+        <script
+          dangerouslySetInnerHTML={{
+            __html: `(function(){var c=document.documentElement.className;if(c==="system"){document.documentElement.className=window.matchMedia("(prefers-color-scheme: dark)").matches?"dark":"";}})();`,
+          }}
+        />
       </head>
       <body>
         <ThemeProvider theme={theme}>
