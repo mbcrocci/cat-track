@@ -1,64 +1,52 @@
-import { createFileRoute } from '@tanstack/react-router'
-import { useQuery } from '@tanstack/react-query'
-import { BarChart3, Cat, Droplets, Wheat } from 'lucide-react'
-import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from 'recharts'
-import { format } from 'date-fns'
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { useQuery } from "@tanstack/react-query";
+import { BarChart3, Cat, Droplets, PawPrint, Wheat } from "lucide-react";
+import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
+import { format } from "date-fns";
 
-import type {StatsData} from '@/server/api/functions';
-import {  getStats } from '@/server/api/functions'
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardHeader,
-  CardTitle,
-} from '@/components/ui/card'
-import {
-  ChartContainer,
-  ChartTooltip,
-  ChartTooltipContent,
-} from '@/components/ui/chart'
-import { Badge } from '@/components/ui/badge'
+import type { StatsData } from "@/server/api/functions";
+import { getStats } from "@/server/api/functions";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
+import { Badge } from "@/components/ui/badge";
+import { Header, Page } from "@/components/page";
 
-export const Route = createFileRoute('/stats')({
+export const Route = createFileRoute("/stats")({
   component: StatsPage,
-})
+});
 
 const chartConfig = {
   count: {
-    label: 'Feedings',
-    color: 'var(--color-chart-1)',
+    label: "Feedings",
+    color: "var(--color-chart-1)",
   },
-}
+};
 
 function StatsPage() {
   const { data: stats, isLoading } = useQuery({
-    queryKey: ['stats'],
+    queryKey: ["stats"],
     queryFn: () => getStats(),
-  })
+  });
 
   return (
-    <div className="relative min-h-dvh overflow-x-hidden bg-background">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none fixed inset-x-0 top-0 -z-10 h-80 opacity-[0.07] dark:opacity-[0.12]"
-        style={{
-          background:
-            'radial-gradient(ellipse 80% 60% at 50% -20%, var(--color-primary), transparent)',
-        }}
-      />
-
+    <Page>
       <main className="relative mx-auto max-w-md px-4 py-6 pb-24">
-        <h1 className="font-display text-xl font-semibold tracking-tight text-foreground">
-          Stats
-        </h1>
-        <p className="mt-0.5 text-[13px] text-muted-foreground">
-          Feeding history and breakdowns
-        </p>
+        <Header
+          title="Stats"
+          subtitle="Feeding history and breakdowns"
+          icon={<BarChart3 className="size-5 text-primary" strokeWidth={2.25} />}
+          navigation={
+            <Link
+              to="/"
+              className="flex items-center gap-1.5 rounded-lg px-2.5 py-1.5 text-sm font-medium text-muted-foreground no-underline outline-none transition-colors hover:bg-secondary hover:text-foreground focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+            >
+              <PawPrint className="size-4" aria-hidden />
+              Track
+            </Link>
+          }
+        />
 
-        {isLoading && (
-          <p className="mt-8 text-sm text-muted-foreground">Loading stats…</p>
-        )}
+        {isLoading && <p className="mt-8 text-sm text-muted-foreground">Loading stats…</p>}
 
         {stats && (
           <div className="mt-8 space-y-8">
@@ -68,15 +56,15 @@ function StatsPage() {
           </div>
         )}
       </main>
-    </div>
-  )
+    </Page>
+  );
 }
 
-function FeedingsByDayChart({ data }: { data: StatsData['byDay'] }) {
+function FeedingsByDayChart({ data }: { data: StatsData["byDay"] }) {
   const chartData = data.map((d) => ({
-    date: format(new Date(d.date), 'MMM d'),
+    date: format(new Date(d.date), "MMM d"),
     count: d.count,
-  }))
+  }));
 
   return (
     <Card className="border-border/50 shadow-sm">
@@ -89,37 +77,25 @@ function FeedingsByDayChart({ data }: { data: StatsData['byDay'] }) {
       </CardHeader>
       <CardContent>
         <ChartContainer config={chartConfig} className="h-[200px] w-full">
-          <BarChart
-            data={chartData}
-            margin={{ top: 8, right: 8, bottom: 8, left: 8 }}
-          >
+          <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
-            <XAxis
-              dataKey="date"
-              tickLine={false}
-              axisLine={false}
-              tickMargin={8}
-            />
+            <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar
-              dataKey="count"
-              radius={[4, 4, 0, 0]}
-              fill="var(--color-chart-1)"
-            />
+            <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="var(--color-chart-1)" />
           </BarChart>
         </ChartContainer>
       </CardContent>
     </Card>
-  )
+  );
 }
 
 function SummaryCards({
   byCat,
   byFoodType,
 }: {
-  byCat: StatsData['byCat']
-  byFoodType: StatsData['byFoodType']
+  byCat: StatsData["byCat"];
+  byFoodType: StatsData["byFoodType"];
 }) {
   return (
     <div className="grid grid-cols-2 gap-3">
@@ -155,11 +131,11 @@ function SummaryCards({
         </CardContent>
       </Card>
     </div>
-  )
+  );
 }
 
-function RecentFeedings({ recent }: { recent: StatsData['recent'] }) {
-  if (recent.length === 0) return null
+function RecentFeedings({ recent }: { recent: StatsData["recent"] }) {
+  if (recent.length === 0) return null;
 
   return (
     <Card className="border-border/50 shadow-sm">
@@ -174,32 +150,20 @@ function RecentFeedings({ recent }: { recent: StatsData['recent'] }) {
               key={r.id}
               className="flex items-center justify-between rounded-lg border border-border/50 bg-muted/30 px-3 py-2 text-sm"
             >
-              <span className="capitalize font-medium text-foreground">
-                {r.cat}
-              </span>
+              <span className="capitalize font-medium text-foreground">{r.cat}</span>
               <div className="flex items-center gap-2">
-                {r.foodType === 'wet' ? (
-                  <Droplets
-                    className="size-3.5 text-muted-foreground"
-                    aria-hidden
-                  />
+                {r.foodType === "wet" ? (
+                  <Droplets className="size-3.5 text-muted-foreground" aria-hidden />
                 ) : (
-                  <Wheat
-                    className="size-3.5 text-muted-foreground"
-                    aria-hidden
-                  />
+                  <Wheat className="size-3.5 text-muted-foreground" aria-hidden />
                 )}
-                <span className="capitalize text-muted-foreground">
-                  {r.foodType}
-                </span>
-                <span className="text-muted-foreground">
-                  {format(r.createdAt, 'MMM d, HH:mm')}
-                </span>
+                <span className="capitalize text-muted-foreground">{r.foodType}</span>
+                <span className="text-muted-foreground">{format(r.createdAt, "MMM d, HH:mm")}</span>
               </div>
             </li>
           ))}
         </ul>
       </CardContent>
     </Card>
-  )
+  );
 }
