@@ -19,16 +19,22 @@ export function Page({ children }: { children: React.ReactNode }) {
   );
 }
 
-export function Header(
-    { title, subtitle, icon, navigation }: { title: string, subtitle: string, icon?: React.ReactNode, navigation?: React.ReactNode }
-
-) {
+export function Header({
+  title,
+  subtitle,
+  icon,
+  navigation,
+}: {
+  title: string;
+  subtitle: string;
+  icon?: React.ReactNode;
+  navigation?: React.ReactNode;
+}) {
   return (
     <header className="animate-fade-in-up flex items-center justify-between">
       <div className="flex items-center gap-3">
         <div className="grid size-10 place-items-center rounded-xl bg-primary/10 ring-1 ring-primary/20">
-        {icon}
-        
+          {icon}
         </div>
         <div>
           <h1 className="font-display text-[1.625rem] font-bold tracking-tight text-foreground">
