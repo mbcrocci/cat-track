@@ -1,3 +1,5 @@
 {
-  "ignorePatterns": ["src/routeTree.gen.ts"]
+  "ignorePatterns": [
+    "src/routeTree.gen.ts"
+  ]
 }
