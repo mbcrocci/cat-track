@@ -6,6 +6,7 @@ import appCss from "../styles.css?url";
 import { ThemeProvider } from "@/components/theme-provider";
 import { getThemeServerFn } from "@/server/theme";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
+import { Toaster } from "@/components/ui/sonner";
 
 export const Route = createRootRoute({
   head: () => ({
@@ -47,6 +48,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <body>
         <ThemeProvider theme={theme}>
           <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+          <Toaster richColors />
         </ThemeProvider>
 
         <TanStackDevtools
