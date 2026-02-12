@@ -1,6 +1,6 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Cat, Clock, Droplets, Loader2, PawPrint } from "lucide-react";
+import { Cat, Clock, Droplets, Loader2, PawPrint, Wheat } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { getLastFeedings, logFeeding } from "@/server/api/functions";
 import { toast } from "sonner";
@@ -82,6 +82,7 @@ function FeedingStatus() {
           color="amber"
           status={feedings.mittens.status as FeedStatus}
           delay={feedings.mittens.delay}
+          foodType={feedings.mittens.foodType ?? null}
         />
       )}
 
@@ -94,6 +95,7 @@ function FeedingStatus() {
           color="teal"
           status={feedings.vaquinha.status as FeedStatus}
           delay={feedings.vaquinha.delay}
+          foodType={feedings.vaquinha.foodType ?? null}
         />
       )}
     </section>
@@ -139,9 +141,10 @@ interface CatCardProps {
   color: CatColor;
   status: FeedStatus;
   delay: number;
+  foodType: "dry" | "wet" | null;
 }
 
-function CatCard({ name, hours, minutes, lastFedAt, color, status, delay }: CatCardProps) {
+function CatCard({ name, hours, minutes, lastFedAt, color, status, delay, foodType }: CatCardProps) {
   const c = colorStyles[color];
   const s = statusStyles[status];
 
@@ -150,7 +153,7 @@ function CatCard({ name, hours, minutes, lastFedAt, color, status, delay }: CatC
       className={`animate-fade-in-up rounded-2xl border-l-4 ${c.border} bg-card p-5 shadow-sm ring-1 ring-border/50`}
       style={{ animationDelay: `${delay}ms` }}
     >
-      {/* Top row — icon, name, status */}
+      {/* Top row — icon, name, status + food type */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
           <div className={`grid size-8 place-items-center rounded-lg ${c.iconBg}`}>
@@ -159,9 +162,26 @@ function CatCard({ name, hours, minutes, lastFedAt, color, status, delay }: CatC
           <span className="text-sm font-semibold text-foreground">{name}</span>
         </div>
 
-        <div className="flex items-center gap-1.5">
-          <span className={`size-1.5 rounded-full ${s.dot}`} />
-          <span className="text-xs text-muted-foreground">{s.label}</span>
+        <div className="flex items-center gap-2">
+          {foodType && (
+            <>
+              {foodType === "wet" ? (
+                <Droplets className="size-3.5 text-muted-foreground" aria-hidden />
+              ) : (
+                <Wheat className="size-3.5 text-muted-foreground" aria-hidden />
+              )}
+              <span className="text-[11px] font-medium capitalize text-muted-foreground">
+                {foodType}
+              </span>
+              <span className="text-muted-foreground/50" aria-hidden="true">
+                ·
+              </span>
+            </>
+          )}
+          <div className="flex items-center gap-1.5">
+            <span className={`size-1.5 rounded-full ${s.dot}`} />
+            <span className="text-xs text-muted-foreground">{s.label}</span>
+          </div>
         </div>
       </div>
 

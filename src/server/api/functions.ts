@@ -33,6 +33,7 @@ const defaultCatFeeding = (cat: "mittens" | "vaquinha") => ({
   lastFedAt: "Never",
   status: "hungry",
   delay: 0,
+  foodType: null as "dry" | "wet" | null,
 });
 
 const getCatFeeding = (cat: "mittens" | "vaquinha", feeding: Feeding[]) => {
@@ -52,6 +53,7 @@ const getCatFeeding = (cat: "mittens" | "vaquinha", feeding: Feeding[]) => {
     lastFedAt: format(lastFeeding.createdAt, "HH:mm PPP"),
     status,
     delay: 0,
+    foodType: lastFeeding.foodType,
   };
 };
 
