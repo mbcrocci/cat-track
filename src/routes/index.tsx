@@ -1,8 +1,14 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
-import { Cat, Clock, Droplets, PawPrint } from "lucide-react";
+import { Cat, Clock, Droplets, Loader2, PawPrint } from "lucide-react";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
+import { getLastFeedings, logFeeding } from "@/server/api/functions";
+import { toast } from "sonner";
+import { Feeding } from "@/server/database/schema";
 
-export const Route = createFileRoute("/")({ component: HomePage });
+export const Route = createFileRoute("/")({
+  component: HomePage,
+});
 
 /* ────────────────────────────────────────────────────────── */
 /*  Page                                                      */
@@ -46,9 +52,7 @@ function Header() {
           <h1 className="font-display text-[1.625rem] font-bold tracking-tight text-foreground">
             Cat Track
           </h1>
-          <p className="text-[13px] leading-tight text-muted-foreground">
-            Thursday, February 12
-          </p>
+          <p className="text-[13px] leading-tight text-muted-foreground">Thursday, February 12</p>
         </div>
       </div>
     </header>
@@ -60,26 +64,38 @@ function Header() {
 /* ────────────────────────────────────────────────────────── */
 
 function FeedingStatus() {
+  const { data: feedings } = useQuery({
+    queryKey: ["last-feedings"],
+    queryFn: () => getLastFeedings(),
+  });
+
+  if (!feedings) return null;
+
   return (
     <section className="mt-10 space-y-4" aria-label="Feeding status">
-      <CatCard
-        name="Mittens"
-        hours={2}
-        minutes={15}
-        lastFedAt="Today at 14:30"
-        color="amber"
-        status="fed"
-        delay={80}
-      />
-      <CatCard
-        name="Vaquinha"
-        hours={5}
-        minutes={45}
-        lastFedAt="Today at 11:00"
-        color="teal"
-        status="hungry"
-        delay={160}
-      />
+      {feedings.mittens && (
+        <CatCard
+          name="Mittens"
+          hours={feedings.mittens.hours}
+          minutes={feedings.mittens.minutes}
+          lastFedAt={feedings.mittens.lastFedAt}
+          color="amber"
+          status={feedings.mittens.status as FeedStatus}
+          delay={feedings.mittens.delay}
+        />
+      )}
+
+      {feedings.vaquinha && (
+        <CatCard
+          name="Vaquinha"
+          hours={feedings.vaquinha.hours}
+          minutes={feedings.vaquinha.minutes}
+          lastFedAt={feedings.vaquinha.lastFedAt}
+          color="teal"
+          status={feedings.vaquinha.status as FeedStatus}
+          delay={feedings.vaquinha.delay}
+        />
+      )}
     </section>
   );
 }
@@ -89,10 +105,7 @@ function FeedingStatus() {
 type CatColor = "amber" | "teal";
 type FeedStatus = "fed" | "hungry";
 
-const colorStyles: Record<
-  CatColor,
-  { border: string; iconBg: string; iconText: string }
-> = {
+const colorStyles: Record<CatColor, { border: string; iconBg: string; iconText: string }> = {
   amber: {
     border: "border-l-amber-400 dark:border-l-amber-500",
     iconBg: "bg-amber-100 dark:bg-amber-950/50",
@@ -128,15 +141,7 @@ interface CatCardProps {
   delay: number;
 }
 
-function CatCard({
-  name,
-  hours,
-  minutes,
-  lastFedAt,
-  color,
-  status,
-  delay,
-}: CatCardProps) {
+function CatCard({ name, hours, minutes, lastFedAt, color, status, delay }: CatCardProps) {
   const c = colorStyles[color];
   const s = statusStyles[status];
 
@@ -148,9 +153,7 @@ function CatCard({
       {/* Top row — icon, name, status */}
       <div className="flex items-center justify-between">
         <div className="flex items-center gap-2.5">
-          <div
-            className={`grid size-8 place-items-center rounded-lg ${c.iconBg}`}
-          >
+          <div className={`grid size-8 place-items-center rounded-lg ${c.iconBg}`}>
             <Cat className={`size-[18px] ${c.iconText}`} strokeWidth={2} />
           </div>
           <span className="text-sm font-semibold text-foreground">{name}</span>
@@ -166,18 +169,12 @@ function CatCard({
       <div className="mt-6 text-center">
         <p className="font-display leading-none text-foreground">
           <span className="text-5xl font-bold tracking-tight">{hours}</span>
-          <span className="ml-0.5 text-xl font-medium text-muted-foreground/70">
-            h
-          </span>
+          <span className="ml-0.5 text-xl font-medium text-muted-foreground/70">h</span>
           <span className="inline-block w-3" />
           <span className="text-5xl font-bold tracking-tight">{minutes}</span>
-          <span className="ml-0.5 text-xl font-medium text-muted-foreground/70">
-            m
-          </span>
+          <span className="ml-0.5 text-xl font-medium text-muted-foreground/70">m</span>
         </p>
-        <p className="mt-2 text-[13px] text-muted-foreground">
-          since last meal
-        </p>
+        <p className="mt-2 text-[13px] text-muted-foreground">since last meal</p>
       </div>
 
       {/* Detail row */}
@@ -195,6 +192,7 @@ function CatCard({
 
 function QuickLogBar() {
   const [wetFood, setWetFood] = useState(false);
+  const foodType = wetFood ? "wet" : "dry";
 
   return (
     <div className="fixed inset-x-0 bottom-0 z-50 animate-slide-up">
@@ -223,9 +221,9 @@ function QuickLogBar() {
             </button>
           </div>
           <div className="grid grid-cols-3 gap-2.5">
-            <QuickLogButton label="Mittens" emoji="🐱" />
-            <QuickLogButton label="Both" emoji="🐾" primary />
-            <QuickLogButton label="Vaquinha" emoji="🐮" />
+            <QuickLogButton label="Mittens" emoji="🐱" cat="mittens" foodType={foodType} />
+            <QuickLogButton label="Both" emoji="🐾" cat="both" foodType={foodType} />
+            <QuickLogButton label="Vaquinha" emoji="🐮" cat="vaquinha" foodType={foodType} />
           </div>
         </div>
       </div>
@@ -239,13 +237,25 @@ interface QuickLogButtonProps {
   label: string;
   emoji: string;
   primary?: boolean;
+  cat: Feeding["cat"];
+  foodType: Feeding["foodType"];
 }
 
-function QuickLogButton({
-  label,
-  emoji,
-  primary = false,
-}: QuickLogButtonProps) {
+function QuickLogButton({ label, emoji, primary = false, cat, foodType }: QuickLogButtonProps) {
+  const queryClient = useQueryClient();
+  const { mutate, isPending } = useMutation({
+    mutationFn: async (data: (typeof logFeeding)["arguments"]) => logFeeding({ data }),
+    onSuccess: () => {
+      toast.success("Feeding logged");
+      queryClient.invalidateQueries({ queryKey: ["last-feedings"] });
+    },
+    onError: () => {
+      toast.error("Failed to log feeding");
+    },
+  });
+
+  const onClick = () => mutate({ cat, foodType });
+
   return (
     <button
       type="button"
@@ -254,9 +264,17 @@ function QuickLogButton({
           ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
           : "bg-secondary text-secondary-foreground"
       }`}
+      disabled={isPending}
+      onClick={onClick}
     >
-      <span className="text-lg leading-none">{emoji}</span>
-      <span className="text-[11px] font-semibold leading-tight">{label}</span>
+      {isPending ? (
+        <Loader2 className="size-4 animate-spin" />
+      ) : (
+        <>
+          <span className="text-lg leading-none">{emoji}</span>
+          <span className="text-[11px] font-semibold leading-tight">{label}</span>
+        </>
+      )}
     </button>
   );
 }
