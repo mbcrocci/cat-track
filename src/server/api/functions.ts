@@ -53,7 +53,7 @@ const getCatFeeding = (cat: "mittens" | "vaquinha", feeding: Array<Feeding>) => 
   return {
     name: lastFeeding.cat,
     hours: hoursSinceLastFeeding,
-    minutes: minutesSinceLastFeeding,
+    minutes: minutesSinceLastFeeding % 60,
     lastFedAt: format(lastFeeding.createdAt, "HH:mm PPP"),
     status,
     delay: 0,
