@@ -9,7 +9,6 @@ import type { StatsData } from "@/server/api/functions";
 import { getStats, deleteFeeding } from "@/server/api/functions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
-import { Badge } from "@/components/ui/badge";
 import { Header, Page } from "@/components/page";
 
 export const Route = createFileRoute("/stats")({
@@ -131,6 +130,40 @@ function FeedingsByDayChart({ data }: { data: StatsData["byDay"] }) {
   );
 }
 
+type Period = "today" | "yesterday" | "total";
+
+const periodLabels: { value: Period; label: string }[] = [
+  { value: "today", label: "Today" },
+  { value: "yesterday", label: "Yest." },
+  { value: "total", label: "Total" },
+];
+
+function PeriodToggle({
+  value,
+  onChange,
+}: {
+  value: Period;
+  onChange: (p: Period) => void;
+}) {
+  return (
+    <div className="flex rounded-md border border-border/60 bg-muted/50 p-0.5 gap-px">
+      {periodLabels.map((p) => (
+        <button
+          key={p.value}
+          onClick={() => onChange(p.value)}
+          className={`relative flex-1 rounded-sm px-2 py-0.5 text-[10px] font-semibold tracking-wide uppercase transition-all duration-200 ${
+            value === p.value
+              ? "bg-primary text-primary-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground"
+          }`}
+        >
+          {p.label}
+        </button>
+      ))}
+    </div>
+  );
+}
+
 function SummaryCards({
   byCat,
   byFoodType,
@@ -138,36 +171,58 @@ function SummaryCards({
   byCat: StatsData["byCat"];
   byFoodType: StatsData["byFoodType"];
 }) {
+  const [catPeriod, setCatPeriod] = useState<Period>("today");
+  const [foodPeriod, setFoodPeriod] = useState<Period>("today");
+
+  const catData = byCat[catPeriod];
+  const foodData = byFoodType[foodPeriod];
+
   return (
     <div className="grid grid-cols-2 gap-3">
       <Card className="border-border/50 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Cat className="size-4 text-muted-foreground" />
-            By cat
-          </CardTitle>
+        <CardHeader className="space-y-2 pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Cat className="size-4 text-muted-foreground" />
+              By cat
+            </CardTitle>
+          </div>
+          <PeriodToggle value={catPeriod} onChange={setCatPeriod} />
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-1.5">
-          {byCat.map(({ cat, count }) => (
-            <Badge key={cat} variant="secondary" className="capitalize">
-              {cat}: {count}
-            </Badge>
+        <CardContent className="space-y-1.5">
+          {catData.map(({ cat, count }) => (
+            <div
+              key={cat}
+              className="flex items-center justify-between rounded-md bg-muted/40 px-2.5 py-1.5"
+            >
+              <span className="text-xs font-medium capitalize text-muted-foreground">{cat}</span>
+              <span className="text-lg font-semibold tabular-nums text-foreground">{count}</span>
+            </div>
           ))}
         </CardContent>
       </Card>
       <Card className="border-border/50 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="flex items-center gap-2 text-sm">
-            <Wheat className="size-4 text-muted-foreground" />
-            <Droplets className="size-3.5 text-muted-foreground" />
-            By type
-          </CardTitle>
+        <CardHeader className="space-y-2 pb-2">
+          <div className="flex items-center justify-between">
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <Wheat className="size-4 text-muted-foreground" />
+              <Droplets className="size-3.5 text-muted-foreground" />
+              By type
+            </CardTitle>
+          </div>
+          <PeriodToggle value={foodPeriod} onChange={setFoodPeriod} />
         </CardHeader>
-        <CardContent className="flex flex-wrap gap-1.5">
-          {byFoodType.map(({ foodType, count }) => (
-            <Badge key={foodType} variant="outline" className="capitalize">
-              {foodType}: {count}
-            </Badge>
+        <CardContent className="space-y-1.5">
+          {foodData.map(({ foodType, count }) => (
+            <div
+              key={foodType}
+              className="flex items-center justify-between rounded-md bg-muted/40 px-2.5 py-1.5"
+            >
+              <span className="text-xs font-medium capitalize text-muted-foreground">
+                {foodType}
+              </span>
+              <span className="text-lg font-semibold tabular-nums text-foreground">{count}</span>
+            </div>
           ))}
         </CardContent>
       </Card>

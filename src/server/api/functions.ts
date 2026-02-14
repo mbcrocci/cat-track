@@ -84,10 +84,14 @@ export const getLastFeedings = createServerFn().handler(async () => {
   };
 });
 
+type CatCount = { cat: string; count: number };
+type FoodTypeCount = { foodType: string; count: number };
+type PeriodBreakdown<T> = { today: T[]; yesterday: T[]; total: T[] };
+
 export type StatsData = {
   byDay: Array<{ date: string; count: number; mittens: number; vaquinha: number }>;
-  byCat: Array<{ cat: string; count: number }>;
-  byFoodType: Array<{ foodType: string; count: number }>;
+  byCat: PeriodBreakdown<CatCount>;
+  byFoodType: PeriodBreakdown<FoodTypeCount>;
   recent: Array<{ id: number; cat: string; foodType: string; createdAt: Date }>;
 };
 
@@ -102,14 +106,26 @@ export const getStats = createServerFn().handler(async (): Promise<StatsData> =>
   const byDayMap = new Map<string, { total: number; mittens: number; vaquinha: number }>(
     dayKeys.map((k) => [k, { total: 0, mittens: 0, vaquinha: 0 }]),
   );
-  const byCatMap = new Map<string, number>([
-    ["mittens", 0],
-    ["vaquinha", 0],
-  ]);
-  const byFoodTypeMap = new Map<string, number>([
-    ["dry", 0],
-    ["wet", 0],
-  ]);
+  const todayKey = format(startOfDay(now), "yyyy-MM-dd");
+  const yesterdayKey = format(startOfDay(subDays(now, 1)), "yyyy-MM-dd");
+
+  const makeCatMap = () =>
+    new Map<string, number>([
+      ["mittens", 0],
+      ["vaquinha", 0],
+    ]);
+  const makeFoodMap = () =>
+    new Map<string, number>([
+      ["dry", 0],
+      ["wet", 0],
+    ]);
+
+  const byCatTotal = makeCatMap();
+  const byCatToday = makeCatMap();
+  const byCatYesterday = makeCatMap();
+  const byFoodTotal = makeFoodMap();
+  const byFoodToday = makeFoodMap();
+  const byFoodYesterday = makeFoodMap();
 
   for (const row of rows) {
     const dayKey = format(startOfDay(row.createdAt), "yyyy-MM-dd");
@@ -119,23 +135,39 @@ export const getStats = createServerFn().handler(async (): Promise<StatsData> =>
       if (row.cat === "mittens") entry.mittens += 1;
       else if (row.cat === "vaquinha") entry.vaquinha += 1;
     }
-    byCatMap.set(row.cat, (byCatMap.get(row.cat) ?? 0) + 1);
-    byFoodTypeMap.set(row.foodType, (byFoodTypeMap.get(row.foodType) ?? 0) + 1);
+
+    byCatTotal.set(row.cat, (byCatTotal.get(row.cat) ?? 0) + 1);
+    byFoodTotal.set(row.foodType, (byFoodTotal.get(row.foodType) ?? 0) + 1);
+
+    if (dayKey === todayKey) {
+      byCatToday.set(row.cat, (byCatToday.get(row.cat) ?? 0) + 1);
+      byFoodToday.set(row.foodType, (byFoodToday.get(row.foodType) ?? 0) + 1);
+    } else if (dayKey === yesterdayKey) {
+      byCatYesterday.set(row.cat, (byCatYesterday.get(row.cat) ?? 0) + 1);
+      byFoodYesterday.set(row.foodType, (byFoodYesterday.get(row.foodType) ?? 0) + 1);
+    }
   }
+
+  const mapToCatArray = (m: Map<string, number>) =>
+    Array.from(m.entries()).map(([cat, count]) => ({ cat, count }));
+  const mapToFoodArray = (m: Map<string, number>) =>
+    Array.from(m.entries()).map(([foodType, count]) => ({ foodType, count }));
 
   return {
     byDay: dayKeys.map((date) => {
       const entry = byDayMap.get(date)!;
       return { date, count: entry.total, mittens: entry.mittens, vaquinha: entry.vaquinha };
     }),
-    byCat: Array.from(byCatMap.entries()).map(([cat, count]) => ({
-      cat,
-      count,
-    })),
-    byFoodType: Array.from(byFoodTypeMap.entries()).map(([foodType, count]) => ({
-      foodType,
-      count,
-    })),
+    byCat: {
+      today: mapToCatArray(byCatToday),
+      yesterday: mapToCatArray(byCatYesterday),
+      total: mapToCatArray(byCatTotal),
+    },
+    byFoodType: {
+      today: mapToFoodArray(byFoodToday),
+      yesterday: mapToFoodArray(byFoodYesterday),
+      total: mapToFoodArray(byFoodTotal),
+    },
     recent: rows.slice(0, 20).map((r) => ({
       id: r.id,
       cat: r.cat,
