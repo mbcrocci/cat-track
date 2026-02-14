@@ -1,4 +1,4 @@
-import { desc } from "drizzle-orm";
+import { desc, eq } from "drizzle-orm";
 import { db } from "../database";
 import { feedings } from "../database/schema";
 import type { Feeding } from "../database/schema";
@@ -17,4 +17,8 @@ export async function logFeeding(input: { cat: Feeding["cat"]; foodType: Feeding
     ...input,
     createdAt: new Date(),
   });
+}
+
+export async function deleteFeeding(id: number) {
+  await db.delete(feedings).where(eq(feedings.id, id));
 }

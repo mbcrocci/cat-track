@@ -11,6 +11,7 @@ import {
   getFeedingsForStats,
   getFeedings as getFeedingsFromDB,
   logFeeding as logFeedingDB,
+  deleteFeeding as deleteFeedingDB,
 } from "./server";
 import type { Feeding } from "../database/schema";
 
@@ -30,6 +31,12 @@ export const logFeeding = createServerFn({ method: "POST" })
     }
 
     return logFeedingDB(data);
+  });
+
+export const deleteFeeding = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.number() }))
+  .handler(async ({ data }) => {
+    return deleteFeedingDB(data.id);
   });
 
 export const getFeedings = createServerFn().handler(() => {

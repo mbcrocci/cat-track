@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useQuery } from "@tanstack/react-query";
-import { BarChart3, Cat, Droplets, PawPrint, Wheat } from "lucide-react";
+import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+import { BarChart3, Cat, Droplets, PawPrint, Trash2, Wheat } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
 import { format } from "date-fns";
 
 import type { StatsData } from "@/server/api/functions";
-import { getStats } from "@/server/api/functions";
+import { getStats, deleteFeeding } from "@/server/api/functions";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ChartContainer, ChartTooltip, ChartTooltipContent } from "@/components/ui/chart";
 import { Badge } from "@/components/ui/badge";
@@ -135,6 +135,15 @@ function SummaryCards({
 }
 
 function RecentFeedings({ recent }: { recent: StatsData["recent"] }) {
+  const queryClient = useQueryClient();
+
+  const deleteMutation = useMutation({
+    mutationFn: deleteFeeding,
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["stats"] });
+    },
+  });
+
   if (recent.length === 0) return null;
 
   return (
@@ -159,6 +168,13 @@ function RecentFeedings({ recent }: { recent: StatsData["recent"] }) {
                 )}
                 <span className="capitalize text-muted-foreground">{r.foodType}</span>
                 <span className="text-muted-foreground">{format(r.createdAt, "MMM d, HH:mm")}</span>
+                <button
+                  onClick={() => deleteMutation.mutate({ data: { id: r.id } })}
+                  className="ml-1 rounded p-1 text-muted-foreground hover:bg-destructive/10 hover:text-destructive"
+                  aria-label="Delete feeding"
+                >
+                  <Trash2 className="size-3.5" />
+                </button>
               </div>
             </li>
           ))}
