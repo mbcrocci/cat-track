@@ -1,4 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { BarChart3, Cat, Droplets, PawPrint, Trash2, Wheat } from "lucide-react";
 import { Bar, BarChart, CartesianGrid, XAxis, YAxis } from "recharts";
@@ -14,13 +15,6 @@ import { Header, Page } from "@/components/page";
 export const Route = createFileRoute("/stats")({
   component: StatsPage,
 });
-
-const chartConfig = {
-  count: {
-    label: "Feedings",
-    color: "var(--color-chart-1)",
-  },
-};
 
 function StatsPage() {
   const { data: stats, isLoading } = useQuery({
@@ -61,28 +55,75 @@ function StatsPage() {
 }
 
 function FeedingsByDayChart({ data }: { data: StatsData["byDay"] }) {
+  const [viewByCat, setViewByCat] = useState(false);
+
   const chartData = data.map((d) => ({
     date: format(new Date(d.date), "MMM d"),
     count: d.count,
+    mittens: d.mittens,
+    vaquinha: d.vaquinha,
   }));
 
   return (
     <Card className="border-border/50 shadow-sm">
       <CardHeader>
-        <CardTitle className="flex items-center gap-2 text-sm">
-          <BarChart3 className="size-4 text-muted-foreground" />
-          Feedings by day
-        </CardTitle>
-        <CardDescription>Last 14 days</CardDescription>
+        <div className="flex items-center justify-between">
+          <div>
+            <CardTitle className="flex items-center gap-2 text-sm">
+              <BarChart3 className="size-4 text-muted-foreground" />
+              Feedings by day
+            </CardTitle>
+            <CardDescription>Last 14 days</CardDescription>
+          </div>
+          <div className="flex rounded-lg border border-border bg-muted p-0.5">
+            <button
+              onClick={() => setViewByCat(false)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                !viewByCat
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              All
+            </button>
+            <button
+              onClick={() => setViewByCat(true)}
+              className={`rounded-md px-2.5 py-1 text-xs font-medium transition-colors ${
+                viewByCat
+                  ? "bg-background text-foreground shadow-sm"
+                  : "text-muted-foreground hover:text-foreground"
+              }`}
+            >
+              By Cat
+            </button>
+          </div>
+        </div>
       </CardHeader>
       <CardContent>
-        <ChartContainer config={chartConfig} className="h-[200px] w-full">
+        <ChartContainer config={{}} className="h-[200px] w-full">
           <BarChart data={chartData} margin={{ top: 8, right: 8, bottom: 8, left: 8 }}>
             <CartesianGrid strokeDasharray="3 3" vertical={false} />
             <XAxis dataKey="date" tickLine={false} axisLine={false} tickMargin={8} />
             <YAxis tickLine={false} axisLine={false} tickMargin={8} />
             <ChartTooltip content={<ChartTooltipContent />} />
-            <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="var(--color-chart-1)" />
+            {viewByCat ? (
+              <>
+                <Bar
+                  dataKey="mittens"
+                  radius={[4, 4, 0, 0]}
+                  fill="#f59e0b"
+                  name="Mittens"
+                />
+                <Bar
+                  dataKey="vaquinha"
+                  radius={[4, 4, 0, 0]}
+                  fill="#14b8a6"
+                  name="Vaquinha"
+                />
+              </>
+            ) : (
+              <Bar dataKey="count" radius={[4, 4, 0, 0]} fill="var(--color-chart-1)" />
+            )}
           </BarChart>
         </ChartContainer>
       </CardContent>
