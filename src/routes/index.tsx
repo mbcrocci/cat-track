@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useState } from "react";
+import { useRef, useState, type PointerEvent as ReactPointerEvent } from "react";
 import { BarChart3, Cat, Clock, Droplets, Loader2, PawPrint, Wheat } from "lucide-react";
 import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { toast } from "sonner";
@@ -256,8 +256,45 @@ interface QuickLogButtonProps {
   foodType: Feeding["foodType"];
 }
 
+const LONG_PRESS_MS = 600;
+
+function formatPromptTime(date: Date) {
+  return `${String(date.getHours()).padStart(2, "0")}:${String(date.getMinutes()).padStart(2, "0")}`;
+}
+
+function getManualFeedingTime() {
+  const response = window.prompt(
+    "What time did you actually feed them? Use HH:mm (24-hour clock).",
+    formatPromptTime(new Date()),
+  );
+
+  if (response === null) {
+    return { cancelled: true } as const;
+  }
+
+  const value = response.trim();
+  const match = /^(?:[01]?\d|2[0-3]):[0-5]\d$/.exec(value);
+
+  if (!match) {
+    return { error: true } as const;
+  }
+
+  const [hours, minutes] = value.split(":").map(Number);
+  const date = new Date();
+  date.setSeconds(0, 0);
+  date.setHours(hours, minutes, 0, 0);
+
+  if (date > new Date()) {
+    date.setDate(date.getDate() - 1);
+  }
+
+  return { createdAt: date.toISOString() } as const;
+}
+
 function QuickLogButton({ label, emoji, primary = false, cat, foodType }: QuickLogButtonProps) {
   const queryClient = useQueryClient();
+  const longPressTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const suppressClickRef = useRef(false);
   const { mutate, isPending } = useMutation({
     mutationFn: async (data: (typeof logFeeding)["arguments"]) => logFeeding({ data }),
     onSuccess: () => {
@@ -269,7 +306,56 @@ function QuickLogButton({ label, emoji, primary = false, cat, foodType }: QuickL
     },
   });
 
-  const onClick = () => mutate({ cat, foodType });
+  const clearLongPressTimer = () => {
+    if (longPressTimerRef.current) {
+      clearTimeout(longPressTimerRef.current);
+      longPressTimerRef.current = null;
+    }
+  };
+
+  const logCurrentFeeding = () => mutate({ cat, foodType });
+
+  const logManualFeeding = () => {
+    const result = getManualFeedingTime();
+
+    if ("cancelled" in result) {
+      return;
+    }
+
+    if ("error" in result) {
+      toast.error("Use HH:mm, for example 18:45");
+      return;
+    }
+
+    mutate({ cat, foodType, createdAt: result.createdAt });
+  };
+
+  const onPointerDown = (event: ReactPointerEvent<HTMLButtonElement>) => {
+    if (event.pointerType === "mouse" && event.button !== 0) {
+      return;
+    }
+
+    suppressClickRef.current = false;
+    clearLongPressTimer();
+    longPressTimerRef.current = setTimeout(() => {
+      suppressClickRef.current = true;
+      logManualFeeding();
+      clearLongPressTimer();
+    }, LONG_PRESS_MS);
+  };
+
+  const onPointerUp = () => {
+    clearLongPressTimer();
+  };
+
+  const onClick = () => {
+    if (suppressClickRef.current) {
+      suppressClickRef.current = false;
+      return;
+    }
+
+    logCurrentFeeding();
+  };
 
   return (
     <button
@@ -280,6 +366,10 @@ function QuickLogButton({ label, emoji, primary = false, cat, foodType }: QuickL
           : "bg-secondary text-secondary-foreground"
       }`}
       disabled={isPending}
+      onPointerCancel={onPointerUp}
+      onPointerDown={onPointerDown}
+      onPointerLeave={onPointerUp}
+      onPointerUp={onPointerUp}
       onClick={onClick}
     >
       {isPending ? (

@@ -14,17 +14,20 @@ export const logFeeding = createServerFn({ method: "POST" })
     z.object({
       cat: z.enum(["mittens", "vaquinha", "both"]),
       foodType: z.enum(["dry", "wet"]),
+      createdAt: z.string().datetime().optional(),
     }),
   )
   .handler(async ({ data }) => {
+    const createdAt = data.createdAt ? new Date(data.createdAt) : undefined;
+
     if (data.cat === "both") {
       return Promise.all([
-        logFeedingDB({ ...data, cat: "mittens" }),
-        logFeedingDB({ ...data, cat: "vaquinha" }),
+        logFeedingDB({ ...data, cat: "mittens", createdAt }),
+        logFeedingDB({ ...data, cat: "vaquinha", createdAt }),
       ]);
     }
 
-    return logFeedingDB(data);
+    return logFeedingDB({ ...data, createdAt });
   });
 
 export const deleteFeeding = createServerFn({ method: "POST" })

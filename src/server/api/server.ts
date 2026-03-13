@@ -12,10 +12,14 @@ export async function getFeedingsForStats() {
   return db.select().from(feedings).orderBy(desc(feedings.createdAt)).limit(100);
 }
 
-export async function logFeeding(input: { cat: Feeding["cat"]; foodType: Feeding["foodType"] }) {
+export async function logFeeding(input: {
+  cat: Feeding["cat"];
+  foodType: Feeding["foodType"];
+  createdAt?: Date;
+}) {
   await db.insert(feedings).values({
     ...input,
-    createdAt: new Date(),
+    createdAt: input.createdAt ?? new Date(),
   });
 }
 
