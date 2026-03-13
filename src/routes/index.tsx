@@ -360,12 +360,13 @@ function QuickLogButton({ label, emoji, primary = false, cat, foodType }: QuickL
   return (
     <button
       type="button"
-      className={`flex h-14 flex-col items-center justify-center gap-0.5 rounded-xl text-sm font-medium transition-all duration-150 active:scale-95 active:brightness-95 ${
+      className={`flex h-14 touch-manipulation select-none flex-col items-center justify-center gap-0.5 rounded-xl text-sm font-medium transition-all duration-150 active:scale-95 active:brightness-95 ${
         primary
           ? "bg-primary text-primary-foreground shadow-md shadow-primary/20"
           : "bg-secondary text-secondary-foreground"
       }`}
       disabled={isPending}
+      onContextMenu={(event) => event.preventDefault()}
       onPointerCancel={onPointerUp}
       onPointerDown={onPointerDown}
       onPointerLeave={onPointerUp}
